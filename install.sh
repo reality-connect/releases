@@ -205,7 +205,7 @@ curl -fsSL "$url" -o "$tmp/$BIN_NAME" || die "failed to download binary: $url"
 curl -fsSL "$SUMS_URL" -o "$tmp/SHA-256SUMS" || die "failed to download $SUMS_URL"
 
 if [ -n "$size" ]; then
-  actual_size="$(wc -c < "$tmp/$BIN_NAME")"
+  actual_size="$(wc -c < "$tmp/$BIN_NAME" | tr -d '[:space:]')"  # BSD wc pads numbers
   [ "$actual_size" = "$size" ] || die "size mismatch for $BIN_NAME (manifest $size, got $actual_size)"
 fi
 
