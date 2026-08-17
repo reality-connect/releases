@@ -31,6 +31,7 @@ PROJECT=""
 PUBLISHER="reality-connect/releases"
 CHANNEL="stable"
 BIN_DIR=""
+BIN_CMD=""
 FORCE=0
 DRY_RUN=0
 MINISIGN_PUBKEY="${RC_MINISIGN_PUBKEY:-}"
@@ -50,6 +51,7 @@ while [ $# -gt 0 ]; do
     --publisher) [ $# -ge 2 ] || usage; PUBLISHER="$2"; shift 2 ;;
     --channel|--lane) [ $# -ge 2 ] || usage; CHANNEL="$2"; shift 2 ;;
     --bin-dir) [ $# -ge 2 ] || usage; BIN_DIR="$2"; shift 2 ;;
+    --bin-name) [ $# -ge 2 ] || usage; BIN_CMD="$2"; shift 2 ;;
     --minisign-pubkey) [ $# -ge 2 ] || usage; MINISIGN_PUBKEY="$2"; shift 2 ;;
     --force) FORCE=1; shift ;;
     --dry-run) DRY_RUN=1; shift ;;
@@ -103,6 +105,9 @@ case "$TARGET" in
   darwin-aarch64|darwin-x86_64|linux-x86_64-gnu|linux-x86_64-musl) ;;
   *) die "unsupported target: $TARGET (supported targets: $SUPPORTED)" ;;
 esac
+
+# The installed command name: --bin-name wins, else the project slug.
+BIN_CMD="${BIN_CMD:-$PROJECT}"
 
 # --- bin dir resolution ----------------------------------------------------
 SUDO=""
@@ -169,13 +174,13 @@ SUMS_URL="${url%/*}/SHA-256SUMS"
 
 # --- update check ----------------------------------------------------------
 CURRENT=""
-if [ "$FORCE" = 0 ] && [ -x "$BIN_DIR/$PROJECT" ]; then
-  if out="$("$BIN_DIR/$PROJECT" version 2>/dev/null)"; then
+if [ "$FORCE" = 0 ] && [ -x "$BIN_DIR/$BIN_CMD" ]; then
+  if out="$("$BIN_DIR/$BIN_CMD" version 2>/dev/null)"; then
     CURRENT="$(printf '%s\n' "$out" | sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n1)"
   fi
 fi
 if [ -n "$CURRENT" ] && [ "$CURRENT" = "$version" ]; then
-  echo "install.sh: already up to date ($PROJECT $version at $BIN_DIR/$PROJECT)"
+  echo "install.sh: already up to date ($BIN_CMD $version at $BIN_DIR/$BIN_CMD)"
   [ "$DRY_RUN" = 1 ] && exit 0
   exit 0
 fi
@@ -253,16 +258,16 @@ if [ -n "$SUDO" ]; then
   sudo mkdir -p "$BIN_DIR"
   sudo chmod 755 "$tmp/$BIN_NAME"
   sudo mv -f "$tmp/$BIN_NAME" "$BIN_DIR/.$PROJECT.stage.$$"
-  sudo mv -f "$BIN_DIR/.$PROJECT.stage.$$" "$BIN_DIR/$PROJECT"
+  sudo mv -f "$BIN_DIR/.$PROJECT.stage.$$" "$BIN_DIR/$BIN_CMD"
 else
   mkdir -p "$BIN_DIR"
   chmod 755 "$tmp/$BIN_NAME"
   mv -f "$tmp/$BIN_NAME" "$BIN_DIR/.$PROJECT.stage.$$"
-  mv -f "$BIN_DIR/.$PROJECT.stage.$$" "$BIN_DIR/$PROJECT"
+  mv -f "$BIN_DIR/.$PROJECT.stage.$$" "$BIN_DIR/$BIN_CMD"
 fi
 
-echo "install.sh: installed $PROJECT $version ($TARGET) -> $BIN_DIR/$PROJECT"
-if out="$("$BIN_DIR/$PROJECT" version 2>/dev/null)"; then
+echo "install.sh: installed $BIN_CMD $version ($TARGET) -> $BIN_DIR/$BIN_CMD"
+if out="$("$BIN_DIR/$BIN_CMD" version 2>/dev/null)"; then
   v="$(printf '%s\n' "$out" | sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n1)"
   [ -n "$v" ] && echo "install.sh: verified $PROJECT $v"
 fi
@@ -271,6 +276,6 @@ case ":$PATH:" in
   *) echo "install.sh: note: $BIN_DIR is not on your PATH — add it, e.g.:"
      echo "  export PATH=\"$BIN_DIR:\$PATH\"" ;;
 esac
-echo "install.sh: next: run '$PROJECT version'"
+echo "install.sh: next: run '$BIN_CMD version'"
 echo "install.sh: update later by re-running this one-liner; pin a lane with"
 echo "install.sh:   --channel stable|beta|nightly  (alias: --lane)  |  --force to reinstall"
