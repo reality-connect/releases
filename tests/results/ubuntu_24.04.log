@@ -1,0 +1,39 @@
+== container: Linux x86_64 -> target linux-x86_64-gnu
+== installing curl
+debconf: delaying package configuration, since apt-utils is not installed
+== syntax
+PASS: sh -n install.sh
+PASS: sh -n release-secrets.sh
+== target detection + dry-run (channel beta)
+PASS: dry-run resolves beta version
+PASS: dry-run target is linux-x86_64-gnu
+PASS: dry-run binary URL basename is cli-linux-x86_64-gnu
+PASS: dry-run installs nothing
+== install (beta)
+PASS: install beta succeeds
+PASS: binary placed in --bin-dir
+PASS: installed binary reports beta version
+PASS: minisign skip note printed
+== idempotent updates
+PASS: same version skips (up to date)
+PASS: skip did not rewrite the binary
+PASS: --force reinstalls
+PASS: --force replaced the binary
+== channel selection
+PASS: install stable channel
+PASS: stable pointer manifest was read
+PASS: stable binary reports 1.0.0
+PASS: --lane alias selects channel
+PASS: --lane installed 1.0.0
+== refusals
+PASS: checksum mismatch refused
+PASS: tampered SHA-256SUMS refused
+PASS: unpublished channel refused
+PASS: unknown flag refused
+PASS: missing --project refused
+PASS: invalid channel refused
+== default bin-dir resolution
+PASS: default bin-dir resolves to /root/.local/bin
+PASS: binary landed in /root/.local/bin
+
+checks: 27 passed, 0 failed
