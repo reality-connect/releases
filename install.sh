@@ -107,6 +107,9 @@ esac
 # --- bin dir resolution ----------------------------------------------------
 SUDO=""
 if [ -n "$BIN_DIR" ]; then
+  # An explicit --bin-dir may not exist yet — create it (no sudo) before deciding
+  # writability, so a fresh user-owned dir never takes the sudo path.
+  mkdir -p "$BIN_DIR" 2>/dev/null || true
   if [ ! -w "$BIN_DIR" ]; then
     if [ "$(id -u)" = 0 ]; then
       : # root creates it at install time
